@@ -1,0 +1,47 @@
+*{box-sizing:border-box}body{margin:0;background:#232323;color:#ddd;font:12px Tahoma,sans-serif}
+#titleBar{background:linear-gradient(90deg,#2d6cdf,#1a3a6a);color:#fff;padding:6px 10px;font-weight:bold;font-size:13px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #1a4a8a}
+#titleBar #verLabel{font-size:10px;font-weight:normal;color:#bcd;opacity:.8}
+#stageWrap{position:sticky;top:0;z-index:2;background:#1b1b1b;padding:8px;border-bottom:1px solid #333}
+#stage{aspect-ratio:16/9;background:linear-gradient(135deg,#3a4a5a,#1d2630 60%,#4a3a2a);overflow:hidden;position:relative;border-radius:4px;display:flex;align-items:center;justify-content:center}
+#cv{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:none}
+.panel{padding:8px}details{background:#2b2b2b;border:1px solid #383838;border-radius:4px;margin-bottom:8px;padding:6px 8px}
+summary{cursor:pointer;font-weight:bold;color:#9cf;padding:2px 0}
+label{display:flex;flex-direction:column;gap:3px;color:#aaa;margin-top:6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+input,select,textarea{background:#1a1a1a;color:#eee;border:1px solid #444;border-radius:3px;padding:4px;font:inherit;width:100%}
+input[type=checkbox]{width:auto}input[type=color]{height:26px;padding:1px}textarea{margin-top:6px;resize:vertical}
+button{background:#3a3a3a;color:#eee;border:1px solid #555;border-radius:3px;padding:6px 10px;cursor:pointer;font:inherit}
+button:hover{background:#474747}.primary{width:100%;background:#2d6cdf;border-color:#2d6cdf;padding:10px;font-weight:bold}
+.row{display:flex;gap:8px;align-items:center;margin-top:6px}.muted{color:#888}
+.swatches{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.swatches span{width:22px;height:22px;border-radius:3px;cursor:pointer;border:1px solid #555}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:5px}
+.card{background:#1a1a1a;border:1px solid #444;border-radius:4px;cursor:pointer;overflow:hidden;text-align:center}
+.card.on{border-color:#2d6cdf;box-shadow:0 0 0 1px #2d6cdf}
+.card .mini{height:44px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#34434f,#1d2630);overflow:hidden;font-weight:bold;font-size:16px}
+.card .nm{font-size:10px;color:#aaa;padding:2px}
+
+.fbtn{flex-wrap:wrap}.fbtn button{flex:1;padding:5px;font-size:11px}.inl{flex-direction:row;align-items:center;white-space:nowrap;margin:0}
+.flist{max-height:170px;overflow:auto;border:1px solid #444;border-radius:3px;margin-top:6px;background:#1a1a1a}
+.fi{display:flex;align-items:center;gap:6px;padding:4px 6px;cursor:pointer;border-bottom:1px solid #2a2a2a}.fi:hover{background:#2c2c2c}.fi.on{background:#20365e}
+.fi .n{flex:1;font-size:15px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.fi b{cursor:pointer;color:#666;font-size:14px}.fi b.fav{color:#ffc400}.fi i{font-style:normal;color:#c66;cursor:pointer}
+.resetb{width:100%;margin-bottom:6px}
+.frow{display:flex;align-items:center;padding:3px 4px;border-bottom:1px solid #2a2a2a;cursor:pointer}.frow input{min-width:0}#updB{margin-inline-start:auto}
+
+.stylebar{padding:2px 0 4px;margin-bottom:4px;border-bottom:1px solid #383838}
+.stylebar .cards{display:grid;grid-template-columns:repeat(6,1fr);gap:3px}
+.stylebar .card{width:auto;min-width:0}
+.stylebar .card .mini{height:28px;font-size:10px}
+.stylebar .card .nm{font-size:8px;padding:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.bar{flex-wrap:nowrap;gap:6px}
+.bar button{padding:4px 8px;font-size:11px;white-space:nowrap}
+.bar #status{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar #updB{margin-inline-start:0}
+
+.hamburger{width:100%;text-align:center;font-size:18px;padding:6px;margin-bottom:8px}
+
+.drawer{background:#2b2b2b;border:1px solid #383838;border-radius:4px;padding:6px 8px;margin-bottom:8px}
+.drawer.hidden{display:none}
+.drawer-item{padding:8px 10px;cursor:pointer;border-bottom:1px solid #383838;color:#9cf}
+.drawer-item:last-child{border-bottom:none}
+.drawer-item:hover{background:#3a3a3a;color:#fff}
