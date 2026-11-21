@@ -9,6 +9,11 @@ function parse(src){var out=[],blocks=String(src).replace(/^\uFEFF/,"").replace(
 function groups(cue,n){n=Math.max(1,n|0);var w=cue.text.split(/\s+/).filter(Boolean);if(!w.length)return[];var total=w.reduce(function(s,x){return s+x.length},0),len=cue.end-cue.start,t=cue.start,out=[];
  for(var i=0;i<w.length;i+=n){var part=w.slice(i,i+n),c=part.reduce(function(s,x){return s+x.length},0),d=len*c/total;out.push({start:+t.toFixed(3),end:+(t+d).toFixed(3),text:part.join(" ")});t+=d}
  out[out.length-1].end=cue.end;return out}
+function fromWords(words,opts){opts=opts||{};var max=Math.max(1,opts.maxWords||6),maxDur=opts.maxDur||4.5,gap=opts.gap==null?.6:opts.gap,off=+opts.offset||0,out=[],cur=null;
+ words.forEach(function(w,i){var text=String(w.text||"").trim(),start=+w.start;if(!text||!isFinite(start))return;var next=words[i+1],end=+w.end;if(!isFinite(end)||end<=start)end=next&&isFinite(+next.start)&&+next.start>start?+next.start:start+.4;
+  var previous=cur&&cur.words[cur.words.length-1],newCue=!cur||cur.words.length>=max||end-cur.start>maxDur||previous&&start-previous.end>gap||previous&&/[.!؟?…]$/.test(previous.text);
+  if(newCue){cur={start:start,end:end,words:[{text:text,start:start,end:end}]};out.push(cur)}else{cur.words.push({text:text,start:start,end:end});cur.end=end}});
+ return out.map(function(c){return{start:+(c.start+off).toFixed(3),end:+(Math.max(c.start+.1,c.end)+off).toFixed(3),text:c.words.map(function(w){return w.text}).join(" ").replace(/\s+([,.!؟?…])/g,"$1").trim()}})}
 function fmtTime(s){var m=Math.floor(s/60),x=(s%60).toFixed(1);return m+":"+(x<10?"0":"")+x}
-g.TextStudioSubs={parse:parse,groups:groups,ts:ts,fmtTime:fmtTime};
+ g.TextStudioSubs={parse:parse,groups:groups,fromWords:fromWords,ts:ts,fmtTime:fmtTime};
 })(this);

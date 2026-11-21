@@ -35,5 +35,12 @@
   if(s.fl=="glitch"){var n=Math.floor(tm*speed*4);out.offset=n%4<2?(n%2?1:-1)*strength*12:0;out.tint=n%2?s.flc:s.flc2;out.amount=out.offset?strength*.7:0}
   return out;
  };
+ api.photoFlash=function(t,o){o=o||{};var sp=Math.max(.1,Number(o.speed)||1),per=Math.max(.05,(Number(o.period)||1)/sp),dec=Math.max(.02,(Number(o.decay)||.4)/sp),m=o.mode||"hit";t=Math.max(0,t||0);
+  if(m=="off")return 0;
+  if(m=="once")return t<dec?Math.pow(1-t/dec,2):0;
+  if(m=="hit"){var u=t%per;return u<dec?Math.pow(1-u/dec,2):0}
+  if(m=="strobe")return (t%per)<per/2?1:0;
+  if(m=="pulse")return .5-.5*Math.cos(2*Math.PI*t/per);
+  return 0};
  root.TextStudioEffects=api;
 })(typeof window!="undefined"?window:globalThis);

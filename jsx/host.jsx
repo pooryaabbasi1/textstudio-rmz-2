@@ -38,3 +38,27 @@ function TS_motionSel(json){try{var jobs=JSON.parse(json),sel=TS_sel();
    if(rot){rot.addKey(kt);rot.setValueAtKey(kt,br+k.r,1);}
    if(op){op.addKey(kt);op.setValueAtKey(kt,bo*k.o/100,1);}}}
  return "OK";}catch(e){return String(e);}}
+
+// ---- read / edit native Premiere text layers ----
+function TS_srcText(clip){for(var i=0;i<clip.components.numItems;i++){var c=clip.components[i];for(var j=0;j<c.properties.numItems;j++){var p=c.properties[j];if(p.displayName=="Source Text"||p.matchName=="ADBE Text Document"||p.displayName=="متن منبع")return p;}}return null;}
+function TS_esc(s){return String(s).replace(/\\/g,"\\\\").replace(/"/g,'\\"').replace(/\r?\n|\r/g,"\\n");}
+function TS_textOf(clip){var p=TS_srcText(clip);if(!p)return null;try{var v=p.getValue(),j=(typeof v=="string")?JSON.parse(v):v;return j;}catch(e){return null;}}
+function TS_selDetail(){try{var s=TS_sel(),a=[];for(var i=0;i<s.length;i++){var c=s[i],j=TS_textOf(c),tx=j&&(j.textEditValue||j.mText)||"";
+ a.push('{"i":'+i+',"start":'+c.start.seconds+',"dur":'+(c.end.seconds-c.start.seconds)+',"text":"'+TS_esc(tx)+'","font":"'+TS_esc(j&&j.fontEditValue||"")+'","size":'+(j&&j.fontSizeEditValue||0)+'}');}
+ return "["+a.join(",")+"]";}catch(e){return String(e);}}
+function TS_disableSel(json){try{var ix=JSON.parse(json),s=TS_sel();for(var i=0;i<ix.length;i++)if(s[ix[i]])s[ix[i]].disabled=true;return "OK";}catch(e){return String(e);}}
+function TS_nativeStyle(json){try{var d=JSON.parse(json),s=TS_sel(),n=0;for(var i=0;i<s.length;i++){var p=TS_srcText(s[i]);if(!p)continue;var v=p.getValue(),j=JSON.parse(v);
+ if(d.font)j.fontEditValue=d.font;if(d.size)j.fontSizeEditValue=d.size;if(d.text)j.textEditValue=d.text;p.setValue(JSON.stringify(j),1);n++;}
+ return n?"OK:"+n:"No text layer";}catch(e){return String(e);}}
+
+function TS_findAdj(bin){for(var i=0;i<bin.children.numItems;i++){var c=bin.children[i];if(c.type==2){var r=TS_findAdj(c);if(r)return r;}else if(/adjustment|ادجاستمنت|لایه تنظیم/i.test(c.name))return c;}return null;}
+function TS_adjust(){try{var seq=app.project.activeSequence;if(!seq)return "سکانسی باز نیست";var it=TS_findAdj(app.project.rootItem);if(!it)return "NOADJ";
+var t=seq.getPlayerPosition(),tr=null,n=seq.videoTracks.numTracks;
+for(var k=n-1;k>=0;k--){var v=seq.videoTracks[k],busy=false;for(var j=0;j<v.clips.numItems;j++){var c=v.clips[j];if(c.start.seconds<=t.seconds+5&&c.end.seconds>t.seconds){busy=true;break;}}if(busy)break;tr=v;}
+if(!tr)tr=seq.videoTracks[n-1];tr.overwriteClip(it,t.seconds);return "OK";}catch(e){return String(e);}}
+
+// Return the selected clip's source media and exact timeline/source timing for offline ASR.
+function TS_asrSel(){try{var seq=app.project.activeSequence;if(!seq)return '{"error":"NO_SEQUENCE"}';var sel=seq.getSelection();if(!sel||!sel.length)return '{"error":"NO_SELECTION"}';
+ for(var i=0;i<sel.length;i++){var c=sel[i];if(!c||!c.projectItem)continue;var p="";try{p=c.projectItem.getMediaPath()}catch(e){}if(!p)continue;
+  return JSON.stringify({path:p,from:c.inPoint.seconds,to:c.outPoint.seconds,start:c.start.seconds});}
+ return '{"error":"NO_MEDIA"}';}catch(e){return JSON.stringify({error:String(e)});}}
