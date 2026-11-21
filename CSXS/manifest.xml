@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="7.0" ExtensionBundleId="com.poorya.textstudio.v2" ExtensionBundleVersion="2.1.2" ExtensionBundleName="متن Rmz 2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <ExtensionList><Extension Id="com.poorya.textstudio.v2.panel" Version="2.1.2"/></ExtensionList>
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.poorya.textstudio.v2" ExtensionBundleVersion="2.1.3" ExtensionBundleName="متن Rmz 2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <ExtensionList><Extension Id="com.poorya.textstudio.v2.panel" Version="2.1.3"/></ExtensionList>
   <ExecutionEnvironment>
     <HostList><Host Name="PPRO" Version="[14.0,99.9]"/></HostList>
     <LocaleList><Locale Code="All"/></LocaleList>
