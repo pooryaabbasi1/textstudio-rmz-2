@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head><meta charset="utf-8"><title>متن Rmz 2</title><link rel="stylesheet" href="css/style.css"></head>
+<body>
+<div id="titleBar">متن Rmz 2 <span id="verLabel" class="muted"></span></div>
+<div id="stageWrap"><div id="stage"><canvas id="cv"></canvas></div>
+  <div class="row bar"><button id="play">▶ تست حرکت</button><button id="reset" class="resetb" style="width:auto;margin:0">↺ ریست</button><button id="updB" title="بروزرسانی اکستنشن">⟳ بروزرسانی</button><span id="status" class="muted"></span></div></div>
+<div class="panel">
+ <div class="stylebar"><div class="cards" id="fxCards"></div><div class="cards" id="tlCards"></div></div>
+ <button id="menuBtn" class="hamburger">☰</button>
+ <div id="menuDrawer" class="drawer hidden">
+  <div class="drawer-item" data-target="sec-text">متن و فونت</div>
+  <div class="drawer-item" data-target="sec-color">رنگ و نور</div>
+  <div class="drawer-item" data-target="sec-chase">نور چرخان دور متن</div>
+  <div class="drawer-item" data-target="sec-tl">نور متحرک روی حروف</div>
+  <div class="drawer-item" data-target="sec-fl">فلش زدن متن</div>
+  <div class="drawer-item" data-target="sec-cnt">شمارنده / انیمیشنی</div>
+  <div class="drawer-item" data-target="sec-bg">بک‌گراند</div>
+  <div class="drawer-item" data-target="sec-motion">موشن ورود / خروج</div>
+  <div class="drawer-item" data-target="sec-sub">زیرنویس</div>
+ </div>
+ <details id="sec-text"><summary>متن و فونت</summary>
+  <textarea id="text" rows="3">سلام دنیا</textarea>
+  <label>فونت فعلی<input id="font" list="fonts" value="Tahoma"><datalist id="fonts"></datalist></label>
+  <div class="row fbtn"><button id="sysF">🖥 فونت‌های سیستم</button><button id="fileF">➕ فایل فونت</button><button id="dirF">📁 پوشه فونت</button></div>
+  <input type="file" id="fileIn" accept=".ttf,.otf,.woff,.woff2" multiple hidden><input type="file" id="dirIn" webkitdirectory multiple hidden>
+  <div class="row"><input id="fq" placeholder="جستجوی فونت..."><label class="inl"><input type="checkbox" id="favOnly">فقط ★</label></div>
+  <div id="fontList" class="flist"></div>
+  <div class="grid"><label>اندازه<input type="number" id="size" value="96"></label>
+  <label>وزن<select id="weight"><option>300</option><option selected>400</option><option>600</option><option>700</option><option>900</option></select></label>
+  <label>فاصله خط<input type="number" step="0.1" id="lh" value="1.3"></label>
+  <label>فاصله حروف<input type="number" id="ls" value="0"></label>
+  <label>چینش<select id="align"><option value="center">وسط</option><option value="right">راست</option><option value="left">چپ</option></select></label>
+  <label>ایتالیک<input type="checkbox" id="italic"></label></div>
+ </details>
+ <details id="sec-color"><summary>رنگ و نور</summary>
+  <div class="swatches" id="sw"></div>
+  <div class="grid"><label>نوع رنگ<select id="fillType"><option value="solid">تک‌رنگ</option><option value="grad">گرادیانت</option></select></label>
+  <label>رنگ ۱<input type="color" id="c1" value="#ffffff"></label>
+  <label>رنگ ۲<input type="color" id="c2" value="#ffcc00"></label>
+  <label>زاویه<input type="number" id="ga" value="90"></label>
+  <label>دورخط<input type="color" id="sc" value="#000000"></label>
+  <label>ضخامت<input type="number" id="sw2" value="0"></label>
+  <label>رنگ Glow<input type="color" id="gc" value="#00d0ff"></label>
+  <label>شدت Glow<input type="range" id="gs" min="0" max="6" value="0"></label>
+  <label>پخش Glow<input type="range" id="gr" min="2" max="80" value="25"></label>
+  <label>سایه<input type="range" id="sh" min="0" max="40" value="0"></label></div>
+ </details>
+ <details id="sec-chase"><summary>نور چرخان دور متن (Light Chase)</summary>
+  <div class="grid"><label>فعال<input type="checkbox" id="ch"></label>
+  <label>رنگ نور<input type="color" id="chc" value="#00e5ff"></label>
+  <label>رنگ دوم<input type="color" id="chc2" value="#ff2fa0"></label>
+  <label>سرعت (دور در ثانیه)<input type="range" id="chs" min="0.1" max="3" step="0.1" value="0.6"></label>
+  <label>ضخامت<input type="range" id="chw" min="1" max="16" value="5"></label>
+  <label>درخشش<input type="range" id="chg" min="0" max="60" value="25"></label>
+  <label>طول نور٪<input type="range" id="chl" min="5" max="50" value="22"></label>
+  <label>تعداد نور<select id="chn"><option>1</option><option>2</option><option>3</option></select></label>
+  <label>جهت<select id="chd"><option value="1">ساعتگرد</option><option value="-1">پادساعتگرد</option></select></label>
+  <label>FPS خروجی<select id="fps"><option>25</option><option selected>30</option><option>60</option></select></label></div>
+ </details>
+ <details id="sec-tl"><summary>نور متحرک روی خود حروف</summary>
+  <div class="grid"><label>حالت<select id="tl"><option value="none">خاموش</option><option value="contour">چرخش نئون دور حروف</option><option value="sweep">پرتو عبوری</option><option value="pulse">تپش نئون</option><option value="flicker">چشمک نئون خراب</option><option value="rainbow">رنگین‌کمان روان</option><option value="scan">اسکن نور از پایین</option><option value="dash">خط‌چین روان دور حروف</option></select></label>
+  <label>رنگ نور<input type="color" id="tlc" value="#00e5ff"></label>
+  <label>رنگ دوم<input type="color" id="tlc2" value="#ff2fa0"></label>
+  <label>سرعت<input type="range" id="tls" min="0.1" max="3" step="0.1" value="0.8"></label>
+  <label>ضخامت<input type="range" id="tlw" min="1" max="12" value="4"></label>
+  <label>درخشش<input type="range" id="tlg" min="0" max="60" value="25"></label></div>
+ </details>
+ <details id="sec-fl"><summary>فلش زدن متن</summary>
+  <div class="cards" id="flCards"></div>
+  <div class="grid"><label>حالت<select id="fl"><option value="none">خاموش</option><option value="strobe">چشمک سریع (استروب)</option><option value="white">فلش سفید</option><option value="colors">فلش رنگی متناوب</option><option value="hit">فلش ضربه‌ای ورود</option><option value="glitch">فلش گلیچ</option><option value="beat">فلش ضرب‌آهنگ (بیت)</option></select></label>
+  <label>سرعت فلش<input type="range" id="fls" min="0.5" max="12" step="0.5" value="4"></label>
+  <label>رنگ ۱<input type="color" id="flc" value="#ffffff"></label>
+  <label>رنگ ۲<input type="color" id="flc2" value="#ff2fa0"></label>
+  <label>شدت٪<input type="range" id="fli" min="10" max="100" value="80"></label></div>
+ </details>
+ <details id="sec-cnt"><summary>شمارنده / متن انیمیشنی</summary>
+  <div class="cards" id="cntCards"></div>
+  <div class="grid"><label>نوع<select id="cnt"><option value="none">خاموش</option><option value="count">شمارنده عدد</option><option value="type">تایپ حرف‌به‌حرف</option><option value="scramble">درهم‌ریختن حروف</option><option value="clock">تایمر ساعت (mm:ss)</option></select></label>
+  <label>از<input type="number" id="cf" value="0"></label>
+  <label>تا<input type="number" id="ct" value="100"></label>
+  <label>مدت شمارش (ث)<input type="number" step="0.1" id="cd" value="2"></label>
+  <label>اعشار<input type="number" id="cdec" value="0" min="0" max="3"></label>
+  <label>منحنی<select id="ce"><option value="out">تند ← آرام</option><option value="lin">ثابت</option><option value="inout">نرم</option></select></label>
+  <label>پیشوند<input id="cpre" value=""></label>
+  <label>پسوند<input id="csuf" value="%"></label>
+  <label>جداکننده هزارگان<input type="checkbox" id="csep" checked></label>
+  <label>اعداد فارسی<input type="checkbox" id="cfa"></label></div>
+ </details>
+ <details id="sec-bg"><summary>بک‌گراند</summary>
+  <div class="grid"><label>فعال<input type="checkbox" id="bg"></label>
+  <label>رنگ<input type="color" id="bgc" value="#111111"></label>
+  <label>شفافیت٪<input type="range" id="bgo" min="0" max="100" value="70"></label>
+  <label>گوشه گرد<input type="number" id="bgr" value="18"></label>
+  <label>پدینگ افقی<input type="number" id="px" value="40"></label>
+  <label>پدینگ عمودی<input type="number" id="py" value="20"></label>
+  <label>نوع پرکردن<select id="bgt"><option value="solid">تک‌رنگ</option><option value="grad">گرادیانت</option><option value="img">تصویر دلخواه</option></select></label>
+  <label>رنگ دوم<input type="color" id="bgc2" value="#2d6cdf"></label>
+  <label>دورخط باکس<input type="number" id="bgb" value="0"></label>
+  <label>رنگ دورخط<input type="color" id="bgbc" value="#ffffff"></label></div>
+  <div class="row fbtn"><button id="bgImgB">🖼 انتخاب تصویر بک‌گراند</button><button id="bgImgX">✕ حذف تصویر</button></div>
+  <input type="file" id="bgImgIn" accept="image/*" hidden><div class="muted" id="bgImgN">تصویری انتخاب نشده</div>
+ </details>
+ <details id="sec-motion"><summary>موشن ورود / خروج (کی‌فریم نیتیو)</summary>
+  <div class="muted" style="margin-top:6px">ورود (روی کارت هاور کنید):</div><div class="cards" id="inCards"></div><div class="muted" style="margin-top:6px">خروج:</div><div class="cards" id="outCards"></div>
+  <div class="grid"><label>ورود<select id="inT" hidden></select></label><label>مدت (ث)<input type="number" step="0.1" id="inD" value="0.6"></label>
+  <label>خروج<select id="outT" hidden></select></label><label>مدت (ث)<input type="number" step="0.1" id="outD" value="0.5"></label>
+  <label>سرعت حرکت<input type="range" id="mspd" min="0.25" max="3" step="0.05" value="1"><span class="muted" id="mspdV">عادی ×1</span></label>
+  <label>نرمی حرکت<select id="mease"><option value="ease-in-out">نرم</option><option value="ease-out">تند ← آرام</option><option value="ease-in">آرام ← تند</option><option value="linear">ثابت</option></select></label>
+  <label>طول کل (ث)<input type="number" step="0.5" id="dur" value="4"></label>
+  <label>موقعیت عمودی٪<input type="number" id="posY" value="50"></label></div>
+ </details>
+ <details id="sec-sub"><summary>زیرنویس آفلاین (SRT / VTT) — رایگان</summary>
+  <div class="row fbtn"><button id="subB">📄 انتخاب فایل زیرنویس</button><button id="subX">✕ پاک کردن</button></div>
+  <input type="file" id="subIn" accept=".srt,.vtt,.txt" hidden>
+  <div id="subDrop" class="muted" style="border:1px dashed #555;border-radius:8px;padding:8px;margin:6px 0;text-align:center">فایل SRT یا VTT را اینجا بکشید و رها کنید</div>
+  <div class="grid"><label>حالت<select id="subMode"><option value="line">جمله کامل</option><option value="word">کلمه‌به‌کلمه (ریلزی)</option></select></label>
+  <label>کلمه در هر تکه<input type="number" id="subN" value="2" min="1" max="8"></label>
+  <label>انیمیشن ورود/خروج کوتاه<input type="checkbox" id="subShort" checked></label></div>
+  <div id="subList" class="flist" style="max-height:220px"></div>
+  <div class="muted" id="subInfo">روی هر خط کلیک کنید تا در پیش‌نمایش ببینید؛ متن خطوط قابل ویرایش است. همه استایل‌ها روی تمام خطوط اعمال می‌شوند.</div>
+  <button id="subApply" class="primary">افزودن همه زیرنویس‌ها به تایم‌لاین</button>
+ </details>
+ <button id="apply" class="primary">افزودن به تایم‌لاین پریمیر</button>
+ <button id="applySel" title="لایه متن (یا هر کلیپ) را در تایم‌لاین انتخاب کنید؛ فقط موشن ورود/خروج با سرعت و شتاب روی خود همان لایه کی‌فریم می‌شود">اعمال فقط موشن روی لایه انتخاب‌شده پریمیر</button>
+</div>
+<script src="js/CSInterface.js"></script><script src="js/effects.js"></script><script src="js/subs.js"></script><script src="js/main.js"></script>
+</body></html>
