@@ -230,17 +230,38 @@ $("asrB").onclick=function(){if(!cs.isInHost()){$("asrInfo").textContent="در �
 $("asrF").onclick=function(){$("asrIn").click()};$("asrIn").onchange=function(){var f=this.files[0];this.value="";if(!f)return;asrRun(function(){return f.arrayBuffer().then(function(b){return{buffer:b,from:0,to:0,offset:0}})})};
 // ---- one-click updater ----
 var UPD="https://raw.githubusercontent.com/pooryaabbasi1/textstudio-rmz-2/main/";
-$("updB").onclick=function(){var st=$("status");if(!cs.isInHost()){st.textContent="بروزرسانی فقط داخل پریمیر کار می‌کند";return}
- var fs=require("fs"),path=require("path"),root=decodeURIComponent(location.pathname).replace(/^\/([A-Za-z]:)/,"$1").replace(/[\\\/]index\.html$/,"");
+var updBox=document.createElement("div");updBox.id="updProgress";updBox.className="updProgress";updBox.hidden=true;
+updBox.innerHTML='<div class="updProgressHead"><span id="updLabel">آماده‌سازی دانلود...</span><b id="updPercent">0%</b></div><div id="updTrack" class="updTrack" role="progressbar" aria-label="درصد دانلود بروزرسانی" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="updFill"></div></div><div id="updBytes" class="updBytes"></div>';
+var updBar2=document.querySelector(".bar2");if(updBar2)updBar2.appendChild(updBox);
+function updFormatBytes(n){return n>=1048576?(n/1048576).toFixed(1)+" MB":(n/1024).toFixed(0)+" KB"}
+function updPaint(progress,total,message){var got=Object.keys(progress).reduce(function(a,k){return a+(progress[k]||0)},0),pct=total?Math.min(100,Math.floor(got*100/total)):0;
+ updBox.hidden=false;updBox.classList.remove("error");document.getElementById("updLabel").textContent=message||"در حال دانلود فایل‌های به‌روزرسانی...";
+ document.getElementById("updPercent").textContent=pct+"%";document.getElementById("updFill").style.width=pct+"%";document.getElementById("updTrack").setAttribute("aria-valuenow",pct);
+ document.getElementById("updBytes").textContent=updFormatBytes(got)+" از "+updFormatBytes(total)}
+$("updB").onclick=function(){var st=$("status"),btn=$("updB");if(!cs.isInHost()){st.textContent="بروزرسانی فقط داخل پریمیر کار می‌کند";return}if(btn.disabled)return;
+ btn.disabled=true;updBox.hidden=true;updBox.classList.remove("error");var fs=require("fs"),path=require("path"),root=decodeURIComponent(location.pathname).replace(/^\/([A-Za-z]:)/,"$1").replace(/[\\\/]index\.html$/ ,"");
  var local={};try{local=JSON.parse(fs.readFileSync(path.join(root,"version.json"),"utf8"))}catch(e){}
  st.textContent="در حال بررسی نسخه جدید...";
- fetch(UPD+"version.json?t="+Date.now()).then(function(r){return r.json()}).then(function(v){
-  if(v.version==local.version){st.textContent="✓ آخرین نسخه نصب است ("+v.version+")";return}
-  return Promise.all(v.files.map(function(f){var url=UPD+f+"?t="+Date.now();return fetch(url).then(function(r){if(!r.ok)throw new Error(f);return r.arrayBuffer()}).then(function(b){if(v.sizes&&v.sizes[f]&&b.byteLength!==v.sizes[f])throw new Error("SIZE:"+f);return [f,b]})})).then(function(all){
+ fetch(UPD+"version.json?t="+Date.now()).then(function(r){if(!r.ok)throw new Error("VERSION_HTTP_"+r.status);return r.json()}).then(function(v){
+  if(v.version==local.version){btn.disabled=false;updBox.hidden=true;st.textContent="✓ آخرین نسخه نصب است ("+v.version+")";return}
+  var progress={},total=v.files.reduce(function(a,f){return a+((v.sizes&&+v.sizes[f])||0)},0);updPaint(progress,total,"در حال دانلود نسخه "+v.version+"...");
+  function downloadFile(f){var expected=(v.sizes&&+v.sizes[f])||0;
+   return fetch(UPD+f+"?t="+Date.now()).then(function(r){if(!r.ok)throw new Error("HTTP_"+r.status+":"+f);
+    var hinted=+(r.headers.get("Content-Length")||0),capacity=expected||hinted,reader=null;try{reader=r.body&&r.body.getReader?r.body.getReader():null}catch(e){}
+    if(!reader)return r.arrayBuffer().then(function(b){if(expected&&b.byteLength!==expected)throw new Error("SIZE:"+f);progress[f]=b.byteLength;updPaint(progress,total);return[f,b]});
+    var store=capacity?new Uint8Array(capacity):null,chunks=[],loaded=0;
+    function readNext(){return reader.read().then(function(part){if(part.done){if(expected&&loaded!==expected)throw new Error("SIZE:"+f);var out;
+      if(store)out=loaded===store.length?store.buffer:store.slice(0,loaded).buffer;
+      else{var joined=new Uint8Array(loaded),offset=0;chunks.forEach(function(c){joined.set(c,offset);offset+=c.byteLength});out=joined.buffer}
+      progress[f]=loaded;updPaint(progress,total);return[f,out]}
+     var chunk=part.value;if(store){if(loaded+chunk.byteLength>store.length)throw new Error("SIZE:"+f);store.set(chunk,loaded)}else chunks.push(chunk);
+     loaded+=chunk.byteLength;progress[f]=loaded;updPaint(progress,total);return readNext()})}
+    return readNext()})}
+  return Promise.all(v.files.map(downloadFile)).then(function(all){updPaint(progress,total,"دانلود کامل شد؛ در حال نصب فایل‌ها...");
    all.forEach(function(x){var p=path.join(root,x[0]);try{fs.mkdirSync(path.dirname(p),{recursive:true})}catch(e){}fs.writeFileSync(p,Buffer.from(x[1]))});
    if(v.modelRevision!==local.modelRevision){["models/whisper-base/onnx/encoder_model_quantized.onnx","models/whisper-base/onnx/decoder_model_merged_quantized.onnx"].forEach(function(f){try{fs.unlinkSync(path.join(root,f))}catch(e){}})}
-   fs.writeFileSync(path.join(root,"version.json"),JSON.stringify(v));st.textContent="✓ به نسخه "+v.version+" بروز شد، در حال بارگذاری مجدد...";setTimeout(function(){location.reload()},800)})
- }).catch(function(e){st.textContent="بروزرسانی ناموفق: اینترنت را بررسی کنید"})};
+   fs.writeFileSync(path.join(root,"version.json"),JSON.stringify(v));document.getElementById("updLabel").textContent="✓ دانلود و نصب کامل شد";st.textContent="✓ به نسخه "+v.version+" بروز شد، در حال بارگذاری مجدد...";setTimeout(function(){location.reload()},900)})
+ }).catch(function(e){btn.disabled=false;updBox.hidden=false;updBox.classList.add("error");document.getElementById("updLabel").textContent="دانلود بروزرسانی ناموفق بود";st.textContent="بروزرسانی ناموفق: "+String(e&&e.message||e||"خطای شبکه")})};
 setTimeout(function(){upd();drawFx();play()},50);
 if(document.fonts)document.fonts.ready.then(function(){upd();drawFx()});
 ;(function(){var st=function(t){$("status").textContent=t},inH=function(){return cs.isInHost()};
