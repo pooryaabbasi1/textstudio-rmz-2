@@ -222,7 +222,7 @@ function asrRun(task){
   info.textContent="در حال آماده‌سازی مدل آفلاین؛ بار اول کمی بیشتر طول می‌کشد...";
   return ASR.transcribe(audio,{language:$("asrL").value,progress:function(p){if(p.status=="progress")info.textContent="در حال خواندن مدل از داخل افزونه..."},chunk:function(){info.textContent="در حال تشخیص گفتار و زمان‌بندی کلمات..."}})
  }).then(function(result){var made=SB.fromWords(result.words,{offset:offset,maxWords:6,maxDur:4.5,gap:.6});if(!made.length)throw new Error("NO_SPEECH");cues=made;drawSubs();$("text").value=cues[0].text;upd();$("status").textContent="✓ "+cues.length+" خط زیرنویس ساخته شد؛ بررسی کنید و به تایم‌لاین اضافه کنید";info.textContent="✓ تشخیص گفتار کامل شد · بدون استفاده از اینترنت"
- }).catch(function(e){var msg=String(e&&e.message||e),fa=msg=="NO_SPEECH"?"گفتاری در این فایل تشخیص داده نشد":msg=="EMPTY_AUDIO_SELECTION"?"بازه صوتی کلیپ خالی است":"خطا در ساخت زیرنویس: "+msg;info.textContent=fa;$("status").textContent=fa;console.error(e)}).then(function(){asrBusy=false;asrButtons(false)})
+ }).catch(function(e){var msg=String(e&&e.message||e),fa=msg=="NO_SPEECH"?"گفتاری در این فایل تشخیص داده نشد":msg=="EMPTY_AUDIO_SELECTION"?"بازه صوتی کلیپ خالی است":msg.indexOf("MODEL_CACHE_WRITE:")==0?"کش مدل آفلاین در پوشه‌ی کاربری قابل نوشتن نیست؛ فضای دیسک و دسترسی AppData را بررسی کنید":"خطا در ساخت زیرنویس: "+msg;info.textContent=fa;$("status").textContent=fa;console.error(e)}).then(function(){asrBusy=false;asrButtons(false)})
 }
 $("asrB").onclick=function(){if(!cs.isInHost()){$("asrInfo").textContent="در پیش‌نمایش سایت از دکمه «از فایل صدا/ویدیو» استفاده کنید";return}
  asrRun(function(){return new Promise(function(resolve,reject){cs.evalScript("TS_asrSel()",function(r){var d;try{d=JSON.parse(r)}catch(e){reject(new Error(r));return}if(d.error){var m={NO_SEQUENCE:"ابتدا یک سکانس باز کنید",NO_SELECTION:"ابتدا کلیپ را در تایم‌لاین انتخاب کنید",NO_MEDIA:"فایل رسانه کلیپ در دسترس نیست"};reject(new Error(m[d.error]||d.error));return}
@@ -261,7 +261,7 @@ $("updB").onclick=function(){var st=$("status"),btn=$("updB");if(!cs.isInHost())
    all.forEach(function(x){var p=path.join(root,x[0]);try{fs.mkdirSync(path.dirname(p),{recursive:true})}catch(e){}fs.writeFileSync(p,Buffer.from(x[1]))});
    if(v.modelRevision!==local.modelRevision){["models/whisper-base/onnx/encoder_model_quantized.onnx","models/whisper-base/onnx/decoder_model_merged_quantized.onnx"].forEach(function(f){try{fs.unlinkSync(path.join(root,f))}catch(e){}})}
    fs.writeFileSync(path.join(root,"version.json"),JSON.stringify(v));document.getElementById("updLabel").textContent="✓ دانلود و نصب کامل شد";st.textContent="✓ به نسخه "+v.version+" بروز شد، در حال بارگذاری مجدد...";setTimeout(function(){location.reload()},900)})
- }).catch(function(e){btn.disabled=false;updBox.hidden=false;updBox.classList.add("error");document.getElementById("updLabel").textContent="دانلود بروزرسانی ناموفق بود";st.textContent="بروزرسانی ناموفق: "+String(e&&e.message||e||"خطای شبکه")})};
+ }).catch(function(e){btn.disabled=false;updBox.hidden=false;updBox.classList.add("error");document.getElementById("updLabel").textContent="دانلود بروزرسانی ناموفق بود";var msg=String(e&&e.message||e||"خطای شبکه");st.textContent=/EPERM|EACCES/.test(msg)?"اجازه‌ی نوشتن در پوشه‌ی نصب نیست؛ برای کارکرد updater افزونه را در %AppData%\\Adobe\\CEP\\extensions نصب کنید":"بروزرسانی ناموفق: "+msg})};
 setTimeout(function(){upd();drawFx();play()},50);
 if(document.fonts)document.fonts.ready.then(function(){upd();drawFx()});
 ;(function(){var st=function(t){$("status").textContent=t},inH=function(){return cs.isInHost()};
@@ -292,8 +292,49 @@ draw()})();
 
 // ---- quick tools ----
 $("scB").onclick=function(){$("scBox").hidden=!$("scBox").hidden};
+(function(){
+ if(!cs.isInHost()||!cs.registerKeyEventsInterest)return;
+ var mac=/Mac/i.test((navigator.platform||"")+" "+(navigator.userAgent||"")),events=[];
+ function reg(keyCode,mods){var e={keyCode:keyCode};mods=mods||{};for(var k in mods)e[k]=mods[k];events.push(e)}
+ if(mac){
+  reg(40,{metaKey:true});reg(40,{ctrlKey:true});reg(12,{});reg(13,{});
+  reg(51,{shiftKey:true});reg(117,{shiftKey:true});reg(2,{metaKey:true});reg(2,{ctrlKey:true});reg(2,{metaKey:true,shiftKey:true});reg(2,{ctrlKey:true,shiftKey:true});
+  reg(42,{});reg(24,{});reg(24,{shiftKey:true});reg(27,{});reg(69,{});reg(78,{});reg(46,{});reg(46,{metaKey:true});reg(46,{ctrlKey:true});
+ }else{
+  reg(75,{ctrlKey:true});reg(81,{});reg(87,{});reg(46,{shiftKey:true});reg(68,{ctrlKey:true});reg(68,{ctrlKey:true,shiftKey:true});
+  reg(220,{});reg(187,{});reg(187,{shiftKey:true});reg(107,{});reg(189,{});reg(109,{});reg(77,{});reg(77,{ctrlKey:true});
+ }
+ try{cs.registerKeyEventsInterest(JSON.stringify(events))}catch(e){}
+})();
+function shortcutTypingTarget(el){while(el&&el!==document){var tag=(el.tagName||"").toLowerCase();if(tag==="input"||tag==="textarea"||tag==="select"||el.isContentEditable)return true;el=el.parentNode}return false}
+var shortcutLabels={addEdit:"افزودن برش روی پلی‌هد",ripplePrev:"برش موجی تا ادیت قبلی",rippleNext:"برش موجی تا ادیت بعدی",rippleDelete:"حذف و بستن فاصله",videoTransition:"ترنزیشن ویدیو",audioTransition:"ترنزیشن صدا",zoomSequence:"زوم کل سکانس",zoomIn:"زوم تایم‌لاین",zoomOut:"کاهش زوم تایم‌لاین",marker:"افزودن مارکر",export:"خروجی گرفتن"};
+document.addEventListener("keydown",function(e){
+ if(!cs.isInHost()||e.repeat||e.altKey)return;
+ var code=e.code||"",typing=shortcutTypingTarget(e.target),mac=/Mac/i.test((navigator.platform||"")+" "+(navigator.userAgent||"")),accel=mac?(e.metaKey||e.ctrlKey):e.ctrlKey,action=null;
+ if(accel&&!e.shiftKey&&code==="KeyK")action="addEdit";
+ else if(accel&&code==="KeyD")action=e.shiftKey?"audioTransition":"videoTransition";
+ else if(accel&&!e.shiftKey&&code==="KeyM")action="export";
+ else if(!e.ctrlKey&&!e.metaKey&&!e.altKey){
+  if(!e.shiftKey&&code==="KeyQ")action="ripplePrev";
+  else if(!e.shiftKey&&code==="KeyW")action="rippleNext";
+  else if(!e.shiftKey&&code==="KeyM")action="marker";
+  else if(!e.shiftKey&&(code==="Backslash"||e.key==="\\"))action="zoomSequence";
+  else if(!e.shiftKey&&(code==="Equal"||code==="NumpadAdd"||e.key==="="))action="zoomIn";
+  else if(e.shiftKey&&code==="Equal"&&(e.key==="+"||e.key==="="))action="zoomIn";
+ else if(!e.shiftKey&&(code==="Minus"||code==="NumpadSubtract"||e.key==="-"))action="zoomOut";
+ else if(e.shiftKey&&(code==="Delete"||code==="Backspace"||e.key==="Delete"||e.key==="Backspace"))action="rippleDelete";
+ }
+ if(!action||typing)return;
+ e.preventDefault();e.stopPropagation();
+ cs.evalScript("TS_shortcut("+JSON.stringify(action)+")",function(r){
+  if(r==="OK")$("status").textContent="✓ "+shortcutLabels[action];
+  else if(String(r).indexOf("COMMAND_NOT_FOUND:")===0)$("status").textContent="فرمان در منوی Premiere پیدا نشد؛ زبان یا نسخه‌ی Premiere و میانبرهایش را بررسی کنید";
+  else if(r==="UNSUPPORTED_API")$("status").textContent="این نسخه‌ی Premiere اجرای فرمان منو از پنل را پشتیبانی نمی‌کند";
+  else $("status").textContent="اجرای میانبر ناموفق بود: "+String(r||"خطای Premiere");
+ });
+},true);
 $("fsB").onclick=function(){var d=document,e=d.documentElement;if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d)}else if(e.requestFullscreen||e.webkitRequestFullscreen){try{(e.requestFullscreen||e.webkitRequestFullscreen).call(e)}catch(x){}}
- $("status").textContent="برای تمام‌صفحه کردن پنل در پریمیر، موس را روی پنل ببرید و کلید ` را بزنید"};
+ $("status").textContent="برای بزرگ‌کردن فریم پنل در پریمیر، موس را روی پنل ببرید و کلید Shift+` را بزنید"};
 $("adjB").onclick=function(){var st=$("status");if(!cs.isInHost()){st.textContent="حالت تست مرورگر: در پریمیر یک لایه ادجاستمنت روی پلی‌هد اضافه می‌شود";return}
  cs.evalScript("TS_adjust()",function(r){st.textContent=r=="OK"?"✓ لایه ادجاستمنت اضافه شد":r=="NOADJ"?"یک‌بار از منوی File › New › Adjustment Layer بسازید؛ از این به بعد با همین دکمه اضافه می‌شود":"خطا: "+r})};
 

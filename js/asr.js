@@ -10,10 +10,16 @@ var MODEL_SPECS=[
  {name:"encoder_model_quantized.onnx",size:23200850,parts:[{file:"encoder_model_quantized.onnx.part01",size:18874368},{file:"encoder_model_quantized.onnx.part02",size:4326482}]},
  {name:"decoder_model_merged_quantized.onnx",size:53707539,parts:[{file:"decoder_model_merged_quantized.onnx.part01",size:18874368},{file:"decoder_model_merged_quantized.onnx.part02",size:18874368},{file:"decoder_model_merged_quantized.onnx.part03",size:15958803}]}
 ];
-var pipePromise=null,wasmObjectURL=null;
+var MODEL_META_FILES=["added_tokens.json","config.json","generation_config.json","merges.txt","normalizer.json","preprocessor_config.json","special_tokens_map.json","tokenizer.json","tokenizer_config.json","vocab.json"];
+var MODEL_CACHE_REVISION="whisper-base-onnx-v1",pipePromise=null,wasmObjectURL=null,LOCAL_MODEL_ROOT=null;
 function req(m){try{return typeof require==="function"?require(m):null}catch(e){return null}}
 function isFile(){return location.protocol==="file:"&&!!req("fs")}
 function rootPath(){return decodeURIComponent(location.pathname).replace(/^\/([A-Za-z]:)/,"$1").replace(/[\\\/]index\.html$/ ,"")}
+function userCacheRoot(){var path=req("path"),os=req("os"),home=os&&os.homedir?os.homedir():"",p=typeof process!="undefined"?process:null,base="";
+ if(p&&p.platform=="win32")base=(p.env&&p.env.LOCALAPPDATA)||path.join(home,"AppData","Local");
+ else if(p&&p.platform=="darwin")base=path.join(home,"Library","Caches");
+ else base=(p&&p.env&&p.env.XDG_CACHE_HOME)||path.join(home,".cache");
+ return path.join(base,"TextStudio-Rmz-2",MODEL_CACHE_REVISION,"models")}
 function wasmSource(){
  if(!isFile())return Promise.resolve(WASM_URL);
  if(wasmObjectURL)return Promise.resolve(wasmObjectURL);
@@ -21,30 +27,24 @@ function wasmSource(){
 }
 function ensureLocalModels(){
  if(!isFile())return Promise.resolve();
- var fs=req("fs"),path=req("path"),base=path.join(rootPath(),MODEL_DIR);
+ var fs=req("fs"),path=req("path"),installed=path.join(rootPath(),"models","whisper-base"),modelsRoot=userCacheRoot(),modelRoot=path.join(modelsRoot,"whisper-base"),onnxRoot=path.join(modelRoot,"onnx");
  try{
-  MODEL_SPECS.forEach(function(spec){
-   var dest=path.join(base,spec.name),valid=false;
+  fs.mkdirSync(onnxRoot,{recursive:true});
+  MODEL_META_FILES.forEach(function(name){var src=path.join(installed,name),dest=path.join(modelRoot,name),srcSize=fs.statSync(src).size,ok=false;
+   try{ok=fs.statSync(dest).size===srcSize}catch(e){}
+   if(!ok){var tmp=dest+".tmp";fs.writeFileSync(tmp,fs.readFileSync(src));try{if(fs.existsSync(dest))fs.unlinkSync(dest)}catch(e){}fs.renameSync(tmp,dest)}
+  });
+  MODEL_SPECS.forEach(function(spec){var dest=path.join(onnxRoot,spec.name),valid=false;
    try{valid=fs.statSync(dest).size===spec.size}catch(e){}
    if(valid)return;
-   var buffers=[];
-   spec.parts.forEach(function(part){
-    var p=path.join(base,part.file);
-    if(!fs.existsSync(p))throw new Error("MODEL_PART_MISSING:"+part.file);
-    var b=fs.readFileSync(p);
-    if(b.length!==part.size)throw new Error("MODEL_PART_SIZE:"+part.file);
-    buffers.push(b);
-   });
-   var full=Buffer.concat(buffers);
+   var installedFull=path.join(installed,"onnx",spec.name),full=null;
+   try{if(fs.statSync(installedFull).size===spec.size)full=fs.readFileSync(installedFull)}catch(e){}
+   if(!full){var buffers=[];spec.parts.forEach(function(part){var p=path.join(installed,"onnx",part.file);if(!fs.existsSync(p))throw new Error("MODEL_PART_MISSING:"+part.file);var b=fs.readFileSync(p);if(b.length!==part.size)throw new Error("MODEL_PART_SIZE:"+part.file);buffers.push(b)});full=Buffer.concat(buffers)}
    if(full.length!==spec.size)throw new Error("MODEL_SIZE:"+spec.name);
-   var tmp=dest+".tmp";
-   fs.writeFileSync(tmp,full);
-   try{if(fs.existsSync(dest))fs.unlinkSync(dest)}catch(e){}
-   fs.renameSync(tmp,dest);
+   var tmp=dest+".tmp";fs.writeFileSync(tmp,full);try{if(fs.existsSync(dest))fs.unlinkSync(dest)}catch(e){}fs.renameSync(tmp,dest);
   });
-  MODEL_SPECS.forEach(function(spec){spec.parts.forEach(function(part){try{fs.unlinkSync(path.join(base,part.file))}catch(e){}})});
-  return Promise.resolve();
- }catch(e){return Promise.reject(e)}
+  LOCAL_MODEL_ROOT=modelsRoot;return Promise.resolve();
+ }catch(e){if(e&&(e.code=="EPERM"||e.code=="EACCES"||e.code=="ENOSPC"||e.code=="EROFS"))return Promise.reject(new Error("MODEL_CACHE_WRITE: "+modelsRoot+" · "+e.message));return Promise.reject(e)}
 }
 function remoteModelResponse(spec){
  return Promise.all(spec.parts.map(function(part){
@@ -61,7 +61,7 @@ function load(progress){
  pipePromise=Promise.resolve().then(ensureLocalModels).then(function(){return Promise.all([import(MODULE_URL),wasmSource()])}).then(function(x){
   var T=x[0],env=T.env,fs=req("fs"),path=req("path"),local=isFile();
   env.allowRemoteModels=false;env.allowLocalModels=true;env.useBrowserCache=false;env.useFSCache=false;
-  env.useFS=local&&!!fs;env.localModelPath=local?path.join(rootPath(),"models")+path.sep:MODEL_URL;
+  env.useFS=local&&!!fs;env.localModelPath=local?(LOCAL_MODEL_ROOT||userCacheRoot())+path.sep:MODEL_URL;
   env.useCustomCache=!local;env.customCache=local?null:{match:function(request){var key=request&&request.url?request.url:String(request);
    for(var i=0;i<MODEL_SPECS.length;i++)if(key.indexOf(MODEL_SPECS[i].name)>=0)return remoteModelResponse(MODEL_SPECS[i]);return Promise.resolve(undefined)},put:function(){return Promise.resolve()}};
   env.backends.onnx.wasm.numThreads=1;env.backends.onnx.wasm.proxy=false;env.backends.onnx.wasm.simd=false;

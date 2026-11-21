@@ -106,3 +106,8 @@ details.lt>summary::after{color:var(--mu)}
 .updProgress.error{border-color:rgba(255,90,90,.55)}
 .updProgress.error #updFill{background:linear-gradient(90deg,#ff496c,#ff9c64);box-shadow:0 0 12px rgba(255,73,108,.5)}
 #updB:disabled{opacity:.65;cursor:wait}
+
+.shortcutBox{font-size:11px;line-height:1.8;border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:4px 0;background:rgba(255,255,255,.035)}
+.shortcutBox>div:not(.shortcutNote){display:flex;align-items:center;gap:7px;padding:1px 0}
+.shortcutBox kbd{display:inline-block;min-width:76px;padding:1px 6px;border:1px solid rgba(255,255,255,.17);border-radius:6px;background:rgba(0,0,0,.24);color:var(--acc);text-align:center;direction:ltr;font:10px Tahoma,sans-serif}
+.shortcutNote{margin-top:6px;padding-top:5px;border-top:1px solid var(--line);color:var(--mu);font-size:10px;line-height:1.7}

@@ -62,3 +62,20 @@ function TS_asrSel(){try{var seq=app.project.activeSequence;if(!seq)return '{"er
  for(var i=0;i<sel.length;i++){var c=sel[i];if(!c||!c.projectItem)continue;var p="";try{p=c.projectItem.getMediaPath()}catch(e){}if(!p)continue;
   return JSON.stringify({path:p,from:c.inPoint.seconds,to:c.outPoint.seconds,start:c.start.seconds});}
  return '{"error":"NO_MEDIA"}';}catch(e){return JSON.stringify({error:String(e)});}}
+
+
+// Run a native Premiere menu command on request from the panel shortcut dispatcher.
+function TS_shortcut(action){
+ var commands={
+  razor:"Razor Tool",selection:"Selection Tool",addEdit:"Add Edit",
+  ripplePrev:"Ripple Trim Previous Edit to Playhead",rippleNext:"Ripple Trim Next Edit to Playhead",
+  rippleDelete:"Ripple Delete",videoTransition:"Apply Video Transition",audioTransition:"Apply Audio Transition",
+  zoomSequence:"Zoom to Sequence",zoomIn:"Zoom In",zoomOut:"Zoom Out",marker:"Add Marker",export:"Export Media"
+ };
+ var command=commands[action];if(!command)return "UNKNOWN_SHORTCUT";
+ try{
+  if(typeof app.findMenuCommandId!="function"||typeof app.executeCommand!="function")return "UNSUPPORTED_API";
+  var id=app.findMenuCommandId(command);if(!id)return "COMMAND_NOT_FOUND:"+command;
+  app.executeCommand(id);return "OK";
+ }catch(e){return "COMMAND_ERROR:"+String(e);}
+}
